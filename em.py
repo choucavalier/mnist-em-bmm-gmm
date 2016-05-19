@@ -84,7 +84,6 @@ class bmm_em(em):
 
         llk = 0
         for n in range(self.n):
-            print(n)
             for k in range(self.k):
                 s = np.sum(self.x[n] * np.log(self.mu[k]))
                 s += np.sum((1.0 - self.x[n]) * np.log(1 - self.mu[k]))
