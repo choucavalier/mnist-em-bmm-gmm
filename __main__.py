@@ -1,11 +1,22 @@
 import numpy as np
+import argparse
 
 from mnist import load_mnist
 import em
 
+parser = argparse.ArgumentParser(
+    prog='em',
+    description='train model with em'
+)
+
+parser.add_argument('--path', default='/home/data/ml/mnist',
+                    help='trading algorithm to use')
+
+args = parser.parse_args()
+
 def main():
 
-    data = load_mnist(dataset='training', path='/home/data/ml/mnist')
+    data = load_mnist(dataset='training', path=args.path)
     data = np.reshape(data, (60000, 784))
     data = np.where(data > 0.5, 1, 0)
 
