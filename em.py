@@ -15,7 +15,7 @@ class em:
     def fit(self):
 
         for i in range(self.iterations):
-            print('iteration', i)
+            print('iteration', i, 'llk =', self.llk)
             self.expectation_step()
             self.maximization_step()
 
@@ -25,6 +25,11 @@ class em:
 
     def maximization_step(self):
         # update pi and parameters
+        pass
+
+    @property
+    def llk(self):
+        # compute log likelihood
         pass
 
 class bmm_em(em):
@@ -73,3 +78,15 @@ class bmm_em(em):
             for i in range(self.n):
                 self.mu[m] += self.z[m,i] * self.x[i].T
             self.mu[m] /= n_m
+
+    @property
+    def llk(self):
+
+        llk = 0
+        for n in range(self.n):
+            print(n)
+            for k in range(self.k):
+                s = np.sum(self.x[n] * np.log(self.mu[k]))
+                s += np.sum((1.0 - self.x[n]) * np.log(1 - self.mu[k]))
+                llk += self.z[k,n] * (np.log(self.pi[k]) + s)
+        return llk
