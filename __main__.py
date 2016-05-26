@@ -12,15 +12,19 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--path', default='/home/data/ml/mnist',
                     help='path to the mnist data')
 
+parser.add_argument('--k', default=10,
+                    help='number of components')
+
 args = parser.parse_args()
 
 def main():
 
-    data = load_mnist(dataset='training', path=args.path)
+    data, labels = load_mnist(dataset='training', path=args.path)
     data = np.reshape(data, (60000, 784))
     data = np.where(data > 0.5, 1, 0)
 
-    model = em.bmm_em(10, data, 784)
+    model = em.bmm_em(50, data, 784)
+    # model.init(labels)
     model.fit()
 
 if __name__ == '__main__':

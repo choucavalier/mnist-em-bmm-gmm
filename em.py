@@ -53,6 +53,16 @@ class bmm_em(em):
         for m in range(self.k):
             for i in range(self.d):
                 self.mu[m,i] = np.random.random() * 0.5 + 0.25
+            self.mu[m] /= sum(self.mu[m])
+
+    def supervized_init(self, labels):
+
+        for l in set(labels):
+            matches = np.in1d(labels, l)
+            mean = self.x[matches].mean(0)
+            self.mu[l] = mean
+            # scipy.misc.toimage(mean.reshape(28, 28)).save('/tmp/mean{}.png'
+                                                          # .format(l))
 
     def expectation_step(self):
 
@@ -62,8 +72,9 @@ class bmm_em(em):
 
         for k in range(self.k):
             logsum[k, :] = np.log(pi[k]) \
-                + np.sum(np.log(mu[k, :] ** self.x), 1) \
-                + np.sum(np.log((1 - mu[k, :]) ** (1 - self.x)), 1)
+                + np.sum(np.log((mu[k, :] ** self.x).clip(min=1e-6)), 1) \
+                + np.sum(np.log(
+                    ((1 - mu[k, :]) ** (1 - self.x)).clip(min=1e-6)), 1)
 
         prod = np.exp(logsum)
 
