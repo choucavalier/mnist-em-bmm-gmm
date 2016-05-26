@@ -74,7 +74,7 @@ class bmm_em(em):
 
         n_ms = np.sum(self.z, 1)
         # updating mu
-        mu = np.dot(np.diag(1 / n_ms), np.dot(self.z, self.x))
+        self.mu = np.dot(np.diag(1 / n_ms), np.dot(self.z, self.x))
         # updating pi
         self.pi = n_ms / self.n
 
