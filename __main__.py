@@ -20,9 +20,7 @@ def main():
     data = np.reshape(data, (60000, 784))
     data = np.where(data > 0.5, 1, 0)
 
-    k = 10
-
-    model = em.bmm_em(k, data, iterations=10)
+    model = em.bmm_em(10, data, 784)
     model.fit()
 
 if __name__ == '__main__':

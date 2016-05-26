@@ -1,23 +1,34 @@
 import numpy as np
+import scipy.misc
+import matplotlib.pyplot as plt
 
 class em:
 
-    def __init__(self, k, x, iterations):
+    def __init__(self, k, d, x):
 
         self.k = k
+        self.d = d
         self.x = x
-        self.iterations = iterations
 
         self.n = self.x.shape[0]
         self.pi = np.array([1 / self.k for _ in range(self.k)])
         self.z = np.ndarray(shape=(self.k, self.n))
+        self.mu = np.ndarray(shape=(self.k, self.d))
 
     def fit(self):
 
-        for i in range(self.iterations):
-            print('iteration', i, 'llk =', self.llk)
+        for iteration in range(10):
+            print('iteration', iteration, 'llk =', self.llk)
+            for k in range(self.k):
+                im = self.plot_mu(k)
+                im.save('/tmp/iteration{}-{}.png'.format(iteration, k))
             self.expectation_step()
             self.maximization_step()
+
+    def plot_mu(self, k):
+
+        return scipy.misc.toimage(self.mu[k].reshape(28, 28),
+                                  cmin=0.0, cmax=1.0)
 
     def expectation_step(self):
         # update z
@@ -34,19 +45,14 @@ class em:
 
 class bmm_em(em):
 
-    def __init__(self, k, x, iterations=10, d=784):
+    def __init__(self, k, x, d):
 
-        super().__init__(k, x, iterations)
-        self.d = d
-
-        self.mu = np.ndarray(shape=(self.k, self.d))
+        super().__init__(k, d, x)
 
         # initialization of mu
         for m in range(self.k):
             for i in range(self.d):
                 self.mu[m,i] = np.random.random() * 0.5 + 0.25
-
-        print(self.mu)
 
     def expectation_step(self):
 
