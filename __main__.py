@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('--path', default='/home/data/ml/mnist',
-                    help='trading algorithm to use')
+                    help='path to the mnist data')
 
 args = parser.parse_args()
 

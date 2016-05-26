@@ -34,7 +34,7 @@ class em:
 
 class bmm_em(em):
 
-    def __init__(self, k, x, iterations=1000, d=784):
+    def __init__(self, k, x, iterations=10, d=784):
 
         super().__init__(k, x, iterations)
         self.d = d
