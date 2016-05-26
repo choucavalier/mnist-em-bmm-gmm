@@ -56,8 +56,8 @@ class bmm_em(em):
 
         for k in range(self.k):
             logsum[k, :] = np.log(pi[k]) \
-                + np.log(np.prod(mu[k, :] ** self.x, 1)) \
-                + np.log(np.prod((1 - mu[k, :]) ** (1 - self.x), 1))
+                + np.sum(np.log(mu[k, :] ** self.x), 1) \
+                + np.sum(np.log((1 - mu[k, :]) ** (1 - self.x)), 1)
 
         prod = np.exp(logsum)
 
@@ -71,6 +71,8 @@ class bmm_em(em):
         mu = np.dot(np.diag(1 / n_ms), np.dot(self.z, self.x))
         # updating pi
         self.pi = n_ms / self.n
+
+        print(self.mu)
 
     @property
     def llk(self):
