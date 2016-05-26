@@ -50,19 +50,19 @@ class bmm_em(em):
 
     def expectation_step(self):
 
+        pi = self.pi; mu = self.mu
+
         logsum = np.ndarray(shape=(self.k, self.n))
 
         for k in range(self.k):
-            logsum[k, ...] = np.log(self.pi[k]) \
-                + np.log(np.prod(self.mu[k, ...] ** self.x, 1)) \
-                + np.log(np.prod((1 - self.mu[k, ...]) ** (1 - self.x), 1))
+            logsum[k, :] = np.log(pi[k]) \
+                + np.log(np.prod(mu[k, :] ** self.x, 1)) \
+                + np.log(np.prod((1 - mu[k, :]) ** (1 - self.x), 1))
 
         prod = np.exp(logsum)
 
         for k in range(self.k):
             self.z[k] = prod[k] / np.sum(prod[k])
-
-        print('z', self.z)
 
     def maximization_step(self):
 
@@ -75,6 +75,5 @@ class bmm_em(em):
     @property
     def llk(self):
 
-        # TODO
 
         return 0
