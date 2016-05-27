@@ -9,6 +9,7 @@ class em:
         self.k = k
         self.d = d
         self.x = x
+        self.xc = 1 - x
 
         self.n = self.x.shape[0]
         self.pi = np.array([1 / self.k for _ in range(self.k)])
@@ -86,7 +87,7 @@ class bmm_em(em):
         for k in range(self.k):
             logsum[k, :] = np.log(pi[k]) \
                 + np.sum(self.x * np.log(mu[k, :].clip(min=1e-3)), 1) \
-                + np.sum((1 - self.x) * np.log((1 - mu[k, :]).clip(min=1e-3)), 1)
+                + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-3)), 1)
 
         prod = np.exp(logsum)
 
