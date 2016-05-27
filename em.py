@@ -2,9 +2,9 @@ import numpy as np
 import scipy.misc
 import matplotlib.pyplot as plt
 
-class em:
+class bmm:
 
-    def __init__(self, k, d, x):
+    def __init__(self, k, x, d):
 
         self.k = k
         self.d = d
@@ -16,6 +16,12 @@ class em:
         self.z = np.ndarray(shape=(self.k, self.n))
         self.mu = np.ndarray(shape=(self.k, self.d))
 
+        # initialization of mu
+        for m in range(self.k):
+            for i in range(self.d):
+                self.mu[m,i] = np.random.random() * 0.5 + 0.25
+            # self.mu[m] /= sum(self.mu[m])
+
     def fit(self):
 
         for iteration in range(10):
@@ -23,7 +29,8 @@ class em:
             for k in range(self.k):
                 im = self.plot_mu(k)
                 im.save('/tmp/iteration{}-{}.png'.format(iteration, k))
-            self.expectation_step()
+            log_support = self._log_support()
+            self.expectation_step(log_support)
             self.maximization_step()
             print(self.pi)
 
@@ -31,31 +38,6 @@ class em:
 
         return scipy.misc.toimage(self.mu[k].reshape(28, 28),
                                   cmin=0.0, cmax=1.0)
-
-    def expectation_step(self):
-        # update z
-        pass
-
-    def maximization_step(self):
-        # update pi and parameters
-        pass
-
-    @property
-    def llk(self):
-        # compute log likelihood
-        pass
-
-class bmm_em(em):
-
-    def __init__(self, k, x, d):
-
-        super().__init__(k, d, x)
-
-        # initialization of mu
-        for m in range(self.k):
-            for i in range(self.d):
-                self.mu[m,i] = np.random.random() * 0.5 + 0.25
-            self.mu[m] /= sum(self.mu[m])
 
     def data_mean_init(self):
 
@@ -65,7 +47,7 @@ class bmm_em(em):
             for i in range(self.d):
                 self.mu[m, i] = mean[i] * np.random.random() + 0.25
 
-    def expectation_step(self):
+    def _log_support(self):
 
         pi = self.pi; mu = self.mu
 
@@ -78,6 +60,10 @@ class bmm_em(em):
 
         print('log_support', log_support)
         print('log_support.max()', log_support.max())
+
+        return log_support
+
+    def expectation_step(self, log_support):
 
         prod = np.exp(log_support)
 
