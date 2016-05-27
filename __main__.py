@@ -23,8 +23,8 @@ def main():
     data = np.reshape(data, (60000, 784))
     data = np.where(data > 0.5, 1, 0)
 
-    model = em.bmm_em(50, data, 784)
-    # model.init(labels)
+    model = em.bmm_em(int(args.k), data, 784)
+    model.data_mean_init()
     model.fit()
 
 if __name__ == '__main__':

@@ -24,6 +24,7 @@ class em:
                 im.save('/tmp/iteration{}-{}.png'.format(iteration, k))
             self.expectation_step()
             self.maximization_step()
+            print(self.pi)
 
     def plot_mu(self, k):
 
@@ -55,9 +56,21 @@ class bmm_em(em):
                 self.mu[m,i] = np.random.random() * 0.5 + 0.25
             self.mu[m] /= sum(self.mu[m])
 
-    def supervized_init(self, labels):
+    def data_mean_init(self):
 
-        for l in set(labels):
+        mean = self.x.mean(0)
+
+        for m in range(self.k):
+            for i in range(self.d):
+                self.mu[m, i] = mean[i] * np.random.random() + 0.25
+
+    def data_classes_mean_init(self, data_labels):
+
+        labels = set(data_labels)
+
+        assert self.k == len(labels), 'k must match the number of labels'
+
+        for l in labels:
             matches = np.in1d(labels, l)
             mean = self.x[matches].mean(0)
             self.mu[l] = mean
@@ -72,20 +85,24 @@ class bmm_em(em):
 
         for k in range(self.k):
             logsum[k, :] = np.log(pi[k]) \
-                + np.sum(np.log((mu[k, :] ** self.x).clip(min=1e-6)), 1) \
-                + np.sum(np.log(
-                    ((1 - mu[k, :]) ** (1 - self.x)).clip(min=1e-6)), 1)
+                + np.sum(self.x * np.log(mu[k, :].clip(min=1e-3)), 1) \
+                + np.sum((1 - self.x) * np.log((1 - mu[k, :]).clip(min=1e-3)), 1)
 
         prod = np.exp(logsum)
 
         for k in range(self.k):
             self.z[k] = prod[k] / np.sum(prod[k])
 
+        print('z', self.z)
+        print('z.max()', self.z.max())
+
     def maximization_step(self):
 
         n_ms = np.sum(self.z, 1)
         # updating mu
         self.mu = np.dot(np.diag(1 / n_ms), np.dot(self.z, self.x))
+
+        print('n_ms', n_ms)
         # updating pi
         self.pi = n_ms / self.n
 
@@ -93,6 +110,5 @@ class bmm_em(em):
 
     @property
     def llk(self):
-
 
         return 0
