@@ -65,19 +65,6 @@ class bmm_em(em):
             for i in range(self.d):
                 self.mu[m, i] = mean[i] * np.random.random() + 0.25
 
-    def data_classes_mean_init(self, data_labels):
-
-        labels = set(data_labels)
-
-        assert self.k == len(labels), 'k must match the number of labels'
-
-        for l in labels:
-            matches = np.in1d(labels, l)
-            mean = self.x[matches].mean(0)
-            self.mu[l] = mean
-            # scipy.misc.toimage(mean.reshape(28, 28)).save('/tmp/mean{}.png'
-                                                          # .format(l))
-
     def expectation_step(self):
 
         pi = self.pi; mu = self.mu
