@@ -1,2 +1,3 @@
 # mnist-em-bmm-gmm
-MNIST handwritten digits classification using a Bernoulli Mixture Model and a Gaussian Mixture Model fitted with the Expectation-Maximization algorithm
+
+MNIST handwritten digits clustering using a Bernoulli Mixture Model (BMM) and a Gaussian Mixture Model (GMM)
