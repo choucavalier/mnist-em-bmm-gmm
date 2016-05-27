@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 
 from mnist import load_mnist
-import em
+import bmm
 
 parser = argparse.ArgumentParser(
     prog='em',
@@ -23,7 +23,7 @@ def main():
     data = np.reshape(data, (60000, 784))
     data = np.where(data > 0.5, 1, 0)
 
-    model = em.bmm(int(args.k), data, 784)
+    model = bmm.bmm(int(args.k), data, 784)
     # model.data_mean_init()
     model.fit()
 
