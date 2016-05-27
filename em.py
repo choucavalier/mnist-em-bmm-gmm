@@ -82,17 +82,19 @@ class bmm_em(em):
 
         pi = self.pi; mu = self.mu
 
-        logsum = np.ndarray(shape=(self.k, self.n))
+        log_support = np.ndarray(shape=(self.k, self.n))
 
         for k in range(self.k):
-            logsum[k, :] = np.log(pi[k]) \
+            log_support[k, :] = np.log(pi[k]) \
                 + np.sum(self.x * np.log(mu[k, :].clip(min=1e-3)), 1) \
                 + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-3)), 1)
 
-        prod = np.exp(logsum)
+        print('log_support', log_support)
+        print('log_support.max()', log_support.max())
 
-        for k in range(self.k):
-            self.z[k] = prod[k] / np.sum(prod[k])
+        prod = np.exp(log_support)
+
+        self.z = np.dot(np.diag(1 / np.sum(prod, 1)), prod)
 
         print('z', self.z)
         print('z.max()', self.z.max())
