@@ -20,7 +20,26 @@ class bmm:
         for k in range(self.k):
             for i in range(self.d):
                 self.mu[k,i] = np.random.random() * 0.5 + 0.25
-            # self.mu[k] /= sum(self.mu[k])
+
+    def data_mean_init(self):
+
+        mean = self.x.mean(0)
+
+        for m in range(self.k):
+            for i in range(self.d):
+                self.mu[m, i] = mean[i] + np.random.random()
+
+    def data_classes_mean_init(self, data_labels):
+
+        labels = set(data_labels)
+
+        assert self.k == len(labels), 'k must match the number of labels'
+
+        for l in labels:
+            matches = np.in1d(data_labels, l)
+            print(matches)
+            mean = self.x[matches].mean(0)
+            self.mu[l] = mean
 
     def fit(self):
 
@@ -30,14 +49,13 @@ class bmm:
                 im.save('/tmp/iteration{}-{}.png'.format(iteration, k))
 
             log_support = self._log_support()
+            log_likelihood = self.log_likelihood(log_support)
+
+            print('iteration {} - llk = {}'.format(iteration, log_likelihood))
 
             self.expectation_step(log_support)
             self.maximization_step()
 
-            print('iteration {} - llk = {}'.format(
-                iteration,
-                self.log_likelihood(log_support),
-            ))
 
     def plot_mu(self, k):
 
@@ -61,8 +79,8 @@ class bmm:
 
         for k in range(self.k):
             log_support[k, :] = np.log(pi[k]) \
-                + np.sum(self.x * np.log(mu[k, :].clip(min=1e-20)), 1) \
-                + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-20)), 1)
+                + np.sum(self.x * np.log(mu[k, :].clip(min=1e-50)), 1) \
+                + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-50)), 1)
 
         return log_support
 
