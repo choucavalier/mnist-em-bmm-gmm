@@ -17,22 +17,27 @@ class bmm:
         self.mu = np.ndarray(shape=(self.k, self.d))
 
         # initialization of mu
-        for m in range(self.k):
+        for k in range(self.k):
             for i in range(self.d):
-                self.mu[m,i] = np.random.random() * 0.5 + 0.25
-            # self.mu[m] /= sum(self.mu[m])
+                self.mu[k,i] = np.random.random() * 0.5 + 0.25
+            # self.mu[k] /= sum(self.mu[k])
 
     def fit(self):
 
-        for iteration in range(10):
-            print('iteration', iteration, 'llk =', self.llk)
+        for iteration in range(1, 11):
             for k in range(self.k):
                 im = self.plot_mu(k)
                 im.save('/tmp/iteration{}-{}.png'.format(iteration, k))
+
             log_support = self._log_support()
+
             self.expectation_step(log_support)
             self.maximization_step()
-            print(self.pi)
+
+            print('iteration {} - llk = {}'.format(
+                iteration,
+                self.log_likelihood(log_support),
+            ))
 
     def plot_mu(self, k):
 
@@ -43,9 +48,10 @@ class bmm:
 
         mean = self.x.mean(0)
 
-        for m in range(self.k):
+        for k in range(self.k):
             for i in range(self.d):
-                self.mu[m, i] = mean[i] * np.random.random() + 0.25
+                self.mu[k, i] = mean[i] * np.random.random() + 0.25
+            self.mu[k] /= sum(self.mu[k])
 
     def _log_support(self):
 
@@ -55,36 +61,26 @@ class bmm:
 
         for k in range(self.k):
             log_support[k, :] = np.log(pi[k]) \
-                + np.sum(self.x * np.log(mu[k, :].clip(min=1e-3)), 1) \
-                + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-3)), 1)
-
-        print('log_support', log_support)
-        print('log_support.max()', log_support.max())
+                + np.sum(self.x * np.log(mu[k, :].clip(min=1e-20)), 1) \
+                + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-20)), 1)
 
         return log_support
 
     def expectation_step(self, log_support):
 
-        prod = np.exp(log_support)
+        log_normalisation = np.logaddexp.reduce(log_support, axis=0)
+        log_responsibilities = log_support - log_normalisation
 
-        self.z = np.dot(np.diag(1 / np.sum(prod, 1)), prod)
-
-        print('z', self.z)
-        print('z.max()', self.z.max())
+        self.z = np.exp(log_responsibilities)
 
     def maximization_step(self):
 
         n_ms = np.sum(self.z, 1)
         # updating mu
         self.mu = np.dot(np.diag(1 / n_ms), np.dot(self.z, self.x))
-
-        print('n_ms', n_ms)
         # updating pi
         self.pi = n_ms / self.n
 
-        print(self.mu)
+    def log_likelihood(self, log_support):
 
-    @property
-    def llk(self):
-
-        return 0
+        return np.sum(np.log(np.sum(np.exp(log_support), 1)))

@@ -24,7 +24,6 @@ def main():
     data = np.where(data > 0.5, 1, 0)
 
     model = bmm.bmm(int(args.k), data, 784)
-    # model.data_mean_init()
     model.fit()
 
 if __name__ == '__main__':
