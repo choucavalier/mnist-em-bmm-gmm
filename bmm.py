@@ -37,7 +37,6 @@ class bmm:
 
         for l in labels:
             matches = np.in1d(data_labels, l)
-            print(matches)
             mean = self.x[matches].mean(0)
             self.mu[l] = mean
 
