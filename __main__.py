@@ -17,22 +17,35 @@ parser.add_argument('--k', default=10,
 
 args = parser.parse_args()
 
-def main():
+def compare_precisions_by_nb_of_components():
 
-    data, labels = load_mnist(dataset='training', path=args.path)
-    data = np.reshape(data, (data.shape[0], 784))
-    data = np.where(data > 0.5, 1, 0)
-
-    classifier = bmm.bmm_classifier(20, data, labels)
-    classifier.train()
-
+    train_data, train_labels = load_mnist(dataset='training', path=args.path)
+    train_data = np.reshape(train_data, (train_data.shape[0], 784))
+    train_data = np.where(train_data > 0.5, 1, 0)
     test_data, test_labels = load_mnist(dataset='testing', path=args.path)
     test_data = np.reshape(test_data, (test_data.shape[0], 784))
     test_data = np.where(test_data > 0.5, 1, 0)
 
-    labels = classifier.classify(test_data)
+    precisions = []
 
-    print(np.mean(labels == test_labels))
+    for k in range(1, 11) + [15, 20, 30, 50, 70, 100, 150, 200]:
+
+        print('learning {} components'.format(k))
+
+        classifier = bmm.bmm_classifier(k, train_data, train_labels)
+        classifier.train()
+
+        labels = classifier.classify(test_data)
+
+        precision = np.mean(labels == test_labels)
+        precisions.append((k, precision))
+        print(k, precision)
+
+    print(precisions)
+
+def main():
+
+    compare_precisions_by_nb_of_components()
 
 if __name__ == '__main__':
 
