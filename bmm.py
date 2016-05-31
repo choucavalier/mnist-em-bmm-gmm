@@ -10,9 +10,9 @@ import classifier
 
 class bmm(mixture.mixture):
 
-    def __init__(self, k):
+    def __init__(self, n_components, n_iter=100, tol=1e-3, verbose=False):
 
-        super().__init__(k)
+        super().__init__(n_components, n_iter, tol, verbose)
 
     def _log_support(self, x):
 

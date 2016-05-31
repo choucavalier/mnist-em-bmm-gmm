@@ -26,7 +26,7 @@ class mixture:
 
         self.converged_ = False
 
-    def fit(self, x):
+    def fit(self, x, init_heuristic='random', labels=None):
 
         k = self.n_components
         n = x.shape[0]
@@ -34,10 +34,16 @@ class mixture:
 
         self.means = np.ndarray(shape=(k, d))
 
+        if self.verbose:
+            print('using {} heuristic to initialize the means')
+
         # initialization of the means
-        for i in range(k):
-            for j in range(d):
-                self.means[i, j] = np.random.random() * 0.5 + 0.25
+        if init_heuristic == 'random':
+            self.means = np.random.rand(k, d) * 0.5 + 0.25
+        elif init_heuristic == 'data_classes_mean':
+            self.means = _data_classes_mean_init(x, labels)
+        elif init_heuristic == 'kmeans':
+            self.means = _kmeans_init(x, k, verbose=self.verbose)
 
         start = datetime.now()
 
@@ -102,10 +108,10 @@ class mixture:
 
         return np.sum(np.exp(self._log_support(x)), 1)
 
-def _kmeans_mu_init(k, means=None):
+def _kmeans_init(x, k, means=None, verbose=False):
 
     if means is None:
-        kmeans = KMeans(n_clusters=k).fit(self.x).cluster_centers_
+        kmeans = KMeans(n_clusters=k, verbose=verbose).fit(x).cluster_centers_
 
     else:
         # keeping the first self.k means
@@ -119,7 +125,7 @@ def _data_classes_mean_init(x, labels):
 
     assert labels.shape[0] == n, 'labels and data shapes must match'
 
-    label_set = set(data_labels)
+    label_set = set(labels)
     n_labels = len(label_set)
 
     means = np.ndarray(shape=(n_labels, d))
