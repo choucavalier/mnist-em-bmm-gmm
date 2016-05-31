@@ -3,6 +3,7 @@ import datetime
 import numpy as np
 import scipy.misc
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 
 class bmm:
 
@@ -22,6 +23,17 @@ class bmm:
         for k in range(self.k):
             for i in range(self.d):
                 self.mu[k,i] = np.random.random() * 0.5 + 0.25
+
+    def kmeans_init(self, means=None):
+
+        if means is None:
+            kmeans = KMeans(n_clusters=self.k).fit(self.x).cluster_centers_
+
+        else:
+            # keeping the first self.k means
+            kmeans = means[:(self.k - 1), :]
+
+        self.mu = kmeans
 
     def data_mean_init(self):
 
@@ -151,12 +163,14 @@ class bmm_classifier:
 
         self.models = dict()
 
-    def train(self):
+    def train(self, means=None):
 
         for label in self.label_set:
 
             data_subset = self.data[np.in1d(self.labels, label)]
             self.models[label] = bmm(self.k, data_subset, self.d)
+
+            if means: self.models[label].kmeans_init(means)
 
             print('training label {} ({} samples)'
                   .format(label, data_subset.shape[0]))

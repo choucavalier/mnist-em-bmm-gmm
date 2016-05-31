@@ -1,5 +1,7 @@
-import numpy as np
 import argparse
+
+import numpy as np
+from sklearn.cluster import KMeans
 
 from mnist import load_mnist
 import bmm
@@ -28,12 +30,18 @@ def compare_precisions_by_nb_of_components():
 
     precisions = []
 
-    for k in list(range(1, 11)) + [15, 20, 30, 50, 70, 100, 150, 200]:
+    ks = list(range(1, 11)) + [15, 20, 30, 50, 70, 100, 150, 200]
+
+    print('computing {} means for initialization'.format(max(ks)))
+    means = KMeans(n_clusters=max(ks),
+                   verbose=2).fit(train_data).cluster_centers_
+
+    for k in ks:
 
         print('learning {} components'.format(k))
 
         classifier = bmm.bmm_classifier(k, train_data, train_labels)
-        classifier.train()
+        classifier.train(means)
 
         labels = classifier.classify(test_data)
 
