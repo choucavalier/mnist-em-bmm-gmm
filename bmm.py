@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as np
 import scipy.misc
 import matplotlib.pyplot as plt
@@ -25,9 +27,9 @@ class bmm:
 
         mean = self.x.mean(0)
 
-        for m in range(self.k):
+        for k in range(self.k):
             for i in range(self.d):
-                self.mu[m, i] = mean[i] + np.random.random()
+                self.mu[k, i] = mean[i] + np.random.random()
 
     def data_classes_mean_init(self, data_labels):
 
@@ -42,24 +44,46 @@ class bmm:
 
     def fit(self):
 
-        for iteration in range(1, 11):
-            for k in range(self.k):
-                im = self.plot_mu(k)
-                im.save('/tmp/iteration{}-{}.png'.format(iteration, k))
+        start = datetime.datetime.now()
+
+        iterations = 0
+
+        previous_log_likelihood = -np.inf
+        log_likelihood = previous_log_likelihood + 1
+
+        while iterations == 0 or (
+                abs(previous_log_likelihood - log_likelihood) > 1e-5 \
+                and previous_log_likelihood < log_likelihood):
+
+            print('\riteration {} (elapsed {})'
+                  .format(iterations, datetime.datetime.now() - start), end='')
 
             log_support = self._log_support()
+            previous_log_likelihood = log_likelihood
             log_likelihood = self.log_likelihood(log_support)
-
-            print('iteration {} - llk = {}'.format(iteration, log_likelihood))
 
             self.expectation_step(log_support)
             self.maximization_step()
 
+            iterations += 1
 
-    def plot_mu(self, k):
+        end = datetime.datetime.now()
 
-        return scipy.misc.toimage(self.mu[k].reshape(28, 28),
-                                  cmin=0.0, cmax=1.0)
+        elapsed = end - start
+
+        print('\r > converged in {} iterations in {}'
+              .format(iterations, elapsed))
+
+
+    def plot_mu(self):
+
+        rows = self.k // 5 + 1
+        columns = min(self.k, 5)
+
+        for k in range(self.k):
+            plt.subplot(rows, columns, k + 1)
+            plt.imshow(scipy.misc.toimage(self.mu[k].reshape(28, 28),
+                                          cmin=0.0, cmax=1.0))
 
     def data_mean_init(self):
 
@@ -70,16 +94,22 @@ class bmm:
                 self.mu[k, i] = mean[i] * np.random.random() + 0.25
             self.mu[k] /= sum(self.mu[k])
 
-    def _log_support(self):
+    def _log_support(self, x=None):
 
         pi = self.pi; mu = self.mu
 
-        log_support = np.ndarray(shape=(self.k, self.n))
+        if x is None:
+            x = self.x
+            xc = self.xc
+        else:
+            xc = 1 - x
+
+        log_support = np.ndarray(shape=(self.k, x.shape[0]))
 
         for k in range(self.k):
             log_support[k, :] = np.log(pi[k]) \
-                + np.sum(self.x * np.log(mu[k, :].clip(min=1e-50)), 1) \
-                + np.sum(self.xc * np.log((1 - mu[k, :]).clip(min=1e-50)), 1)
+                + np.sum(x * np.log(mu[k, :].clip(min=1e-50)), 1) \
+                + np.sum(xc * np.log((1 - mu[k, :]).clip(min=1e-50)), 1)
 
         return log_support
 
@@ -101,3 +131,49 @@ class bmm:
     def log_likelihood(self, log_support):
 
         return np.sum(np.log(np.sum(np.exp(log_support), 1)))
+
+    def likelihood(self, x):
+
+        log_support = self._log_support(x)
+        return np.sum(np.exp(log_support), 0)
+
+class bmm_classifier:
+
+    def __init__(self, k, data, labels):
+
+        self.data = data
+        self.labels = labels
+        self.label_set = set(labels)
+        self.k = k
+
+        self.n = data.shape[0]
+        self.d = data.shape[1]
+
+        self.models = dict()
+
+    def train(self):
+
+        for label in self.label_set:
+
+            data_subset = self.data[np.in1d(self.labels, label)]
+            self.models[label] = bmm(self.k, data_subset, self.d)
+
+            print('training label {} ({} samples)'
+                  .format(label, data_subset.shape[0]))
+
+            self.models[label].fit()
+
+    def classify(self, data):
+
+        highest_likelihood = 0
+        likeliest_label = None
+
+        likelihoods = np.ndarray(shape=(len(self.label_set), data.shape[0]))
+        labels = np.ndarray(shape=(data.shape[0],))
+
+        for label in self.label_set:
+            likelihoods[label] = self.models[label].likelihood(data)
+
+        labels = np.argmax(likelihoods, axis=0)
+
+        return labels
