@@ -1,18 +1,14 @@
-import datetime
-
 import numpy as np
-import scipy.misc
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 
 import mixture
-import classifier
+
+EPS = np.finfo(float).eps
 
 class bmm(mixture.mixture):
 
-    def __init__(self, n_components, n_iter=100, tol=1e-3, verbose=False):
+    def __init__(self, n_components, verbose=False):
 
-        super().__init__(n_components, n_iter, tol, verbose)
+        super().__init__(n_components, verbose=verbose)
 
     def _log_support(self, x):
 
@@ -32,10 +28,9 @@ class bmm(mixture.mixture):
 
     def _do_mstep(self, x, z):
 
-        n = x.shape[0]
+        weights = z.sum(axis=0)
+        weighted_x_sum = np.dot(z.T, x)
+        inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
 
-        n_ms = np.sum(z, 0)
-        # updating the means
-        self.means = np.dot(np.diag(1 / n_ms), np.dot(z.T, x))
-        # updating the weights
-        self.weights = n_ms / n
+        self.weights = (weights / (weights.sum() + 10 * EPS) + EPS)
+        self.means = weighted_x_sum * inverse_weights

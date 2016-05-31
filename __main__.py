@@ -51,9 +51,8 @@ def compare_precisions_by_nb_of_components():
         expected_labels = test_labels
 
         precision = np.mean(predicted_labels == expected_labels)
-        print(predicted_labels, expected_labels)
         precisions.append((k, precision))
-        print(k, precision)
+        print('precision: {}'.format(precision))
 
     print(precisions)
 

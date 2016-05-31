@@ -6,11 +6,9 @@ import scipy.misc
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
-EPS = np.finfo(float).eps
-
 class mixture:
 
-    def __init__(self, n_components, n_iter=100, tol=1e-3, verbose=False):
+    def __init__(self, n_components, n_iter=10, tol=1e-3, verbose=False):
 
         #: number of components in the mixture
         self.n_components = n_components
@@ -52,7 +50,7 @@ class mixture:
         prev_log_likelihood = None
         current_log_likelihood = -np.inf
 
-        for i in range(1, self.n_iter + 1):
+        while iterations <= self.n_iter:
 
             elapsed = datetime.now() - start
 
@@ -65,7 +63,7 @@ class mixture:
             if self.verbose:
 
                 print('[{:02d}] likelihood = {} (elapsed {})'
-                      .format(i, current_log_likelihood, elapsed))
+                      .format(iterations, current_log_likelihood, elapsed))
 
             if prev_log_likelihood is not None:
                 change = abs(current_log_likelihood - prev_log_likelihood)
@@ -81,7 +79,8 @@ class mixture:
 
         elapsed = end - start
 
-        print('converged in {} iterations in {}'.format(i, elapsed))
+        print('converged in {} iterations in {}'
+              .format(iterations, elapsed))
 
     def plot_means(self):
 
