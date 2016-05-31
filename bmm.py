@@ -48,18 +48,18 @@ class bmm:
 
         iterations = 0
 
-        previous_log_likelihood = -np.inf
-        log_likelihood = previous_log_likelihood + 1
+        prev_log_likelihood = -np.inf
+        log_likelihood = prev_log_likelihood + 1
 
         while iterations == 0 or (
-                abs(previous_log_likelihood - log_likelihood) > 1e-5 \
-                and previous_log_likelihood < log_likelihood):
+                abs(prev_log_likelihood - log_likelihood) > 1e-5 \
+                and prev_log_likelihood < log_likelihood):
 
             print('\riteration {} (elapsed {})'
                   .format(iterations, datetime.datetime.now() - start), end='')
 
             log_support = self._log_support()
-            previous_log_likelihood = log_likelihood
+            prev_log_likelihood = log_likelihood
             log_likelihood = self.log_likelihood(log_support)
 
             self.expectation_step(log_support)
