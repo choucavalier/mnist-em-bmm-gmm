@@ -28,7 +28,7 @@ def compare_precisions_by_nb_of_components():
 
     precisions = []
 
-    for k in range(1, 11) + [15, 20, 30, 50, 70, 100, 150, 200]:
+    for k in list(range(1, 11)) + [15, 20, 30, 50, 70, 100, 150, 200]:
 
         print('learning {} components'.format(k))
 
