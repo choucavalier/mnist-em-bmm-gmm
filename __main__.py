@@ -33,8 +33,7 @@ def compare_precisions_by_nb_of_components():
 
     precisions = []
 
-    # ks = list(range(1, 11)) + [15, 20, 30]
-    ks = list(range(1, 5))
+    ks = list(range(1, 11)) + [15, 20, 30]
 
     # print('computing {} means for initialization'.format(max(ks)))
     # means = KMeans(n_clusters=max(ks),
