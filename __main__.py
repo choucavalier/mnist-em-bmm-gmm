@@ -5,6 +5,7 @@ from sklearn.cluster import KMeans
 
 from mnist import load_mnist
 import bmm
+import classifier
 
 parser = argparse.ArgumentParser(
     prog='em',
@@ -28,24 +29,29 @@ def compare_precisions_by_nb_of_components():
     test_data = np.reshape(test_data, (test_data.shape[0], 784))
     test_data = np.where(test_data > 0.5, 1, 0)
 
+    label_set = set(train_labels)
+
     precisions = []
 
-    ks = list(range(1, 11)) + [15, 20, 30, 50, 70, 100, 150, 200]
+    # ks = list(range(1, 11)) + [15, 20, 30]
+    ks = list(range(1, 5))
 
-    print('computing {} means for initialization'.format(max(ks)))
-    means = KMeans(n_clusters=max(ks),
-                   verbose=2).fit(train_data).cluster_centers_
+    # print('computing {} means for initialization'.format(max(ks)))
+    # means = KMeans(n_clusters=max(ks),
+                   # verbose=2).fit(train_data).cluster_centers_
 
     for k in ks:
 
         print('learning {} components'.format(k))
 
-        classifier = bmm.bmm_classifier(k, train_data, train_labels)
-        classifier.train(means)
+        model = classifier.classifier(k)
+        model.fit(train_data, train_labels)
 
-        labels = classifier.classify(test_data)
+        predicted_labels = model.predict(test_data, label_set)
+        expected_labels = test_labels
 
-        precision = np.mean(labels == test_labels)
+        precision = np.mean(predicted_labels == expected_labels)
+        print(predicted_labels, expected_labels)
         precisions.append((k, precision))
         print(k, precision)
 
