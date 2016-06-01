@@ -4,9 +4,11 @@ import mixture
 
 class bmm(mixture.mixture):
 
-    def __init__(self, n_components, n_iter=100, verbose=False):
+    def __init__(self, n_components, covariance_type='diag',
+                 n_iter=100, verbose=False):
 
-        super().__init__(n_components, n_iter=n_iter, verbose=verbose)
+        super().__init__(n_components, covariance_type=covariance_type,
+                         n_iter=n_iter, verbose=verbose)
 
     def _log_support(self, x):
 

@@ -41,9 +41,10 @@ def _log_multivariate_normal_density_full(x, means, covars, min_covar=1.e-7):
 
 class gmm(mixture.mixture):
 
-    def __init__(self, n_components, covariance_type='diag', verbose=False):
+    def __init__(self, n_components, covariance_type='diag',
+                 n_iter=100, verbose=False):
 
-        super().__init__(n_components, init_params='wmc',
+        super().__init__(n_components, init_params='wmc', n_iter=n_iter,
                          covariance_type=covariance_type, verbose=verbose)
 
     def _log_support(self, x):
