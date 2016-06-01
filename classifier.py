@@ -16,19 +16,17 @@ class classifier:
 
     def __init__(self, n_components,
                  means_init_heuristic='random',
+                 covariance_type='diag',
                  model_type='bmm', means=None, verbose=False):
 
         self.n_components = n_components
-
         self.means_init_heuristic = means_init_heuristic
+        self.covariance_type = covariance_type
+        self.model_class = _model_class_from_type(model_type)
+        self.means = means
+        self.verbose = verbose
 
         self.models = dict()
-
-        self.model_class = _model_class_from_type(model_type)
-
-        self.means = means
-
-        self.verbose = verbose
 
     def fit(self, x, labels):
 
@@ -38,8 +36,9 @@ class classifier:
 
             x_subset = x[np.in1d(labels, label)]
 
-            self.models[label] = self.model_class(self.n_components,
-                                                  verbose=self.verbose)
+            self.models[label] = self.model_class(
+                self.n_components, covariance_type=self.covariance_type,
+                verbose=self.verbose)
 
             print('training label {} ({} samples)'
                   .format(label, x_subset.shape[0]))

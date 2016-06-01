@@ -8,8 +8,8 @@ EPS = np.finfo(float).eps
 
 class mixture:
 
-    def __init__(self, n_components, init_params='wm', n_iter=100,
-                 tol=1e-3, min_covar=1e-4, verbose=False):
+    def __init__(self, n_components, init_params='wm', n_iter=100, tol=1e-3,
+                 covariance_type='diag', min_covar=1e-4, verbose=False):
 
         #: number of components in the mixture
         self.n_components = n_components
@@ -19,6 +19,7 @@ class mixture:
         self.n_iter = n_iter
         #: convergence threshold
         self.tol = tol
+        self.covariance_type = covariance_type
         self.min_covar = min_covar
         self.verbose = verbose
 
@@ -59,7 +60,10 @@ class mixture:
             if self.verbose:
                 print('initializing covars')
             cv = np.cov(x.T) + self.min_covar * np.eye(x.shape[1])
-            self.covars = np.tile(np.diag(cv), (k, 1))
+            if self.covariance_type == 'diag':
+                self.covars = np.tile(np.diag(cv), (k, 1))
+            elif self.covariance_type == 'full':
+                self.covars = np.tile(cv, (k, 1, 1))
 
         start = datetime.now()
 
@@ -133,7 +137,7 @@ def _kmeans_init(x, k, means=None, verbose=False):
     else:
         assert means.shape[0] >= k, 'not enough means provided for kmeans init'
         # keeping the first self.k means
-        kmeans = means[:(k - 1), :]
+        kmeans = means[:k, :]
 
     return kmeans
 

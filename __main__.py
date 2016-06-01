@@ -2,10 +2,12 @@ import argparse
 
 import numpy as np
 from sklearn.cluster import KMeans
+import sklearn.decomposition
 
 from mnist import load_mnist
-import bmm
+import gmm
 import classifier
+import kmeans as kmeans_
 
 parser = argparse.ArgumentParser(
     prog='em',
@@ -22,12 +24,20 @@ args = parser.parse_args()
 
 def compare_precisions_by_nb_of_components():
 
+    kmeans = kmeans_.load_kmeans('kmeans-20.dat')
+
     train_data, train_labels = load_mnist(dataset='training', path=args.path)
     train_data = np.reshape(train_data, (train_data.shape[0], 784))
-    train_data = np.where(train_data > 0.5, 1, 0)
     test_data, test_labels = load_mnist(dataset='testing', path=args.path)
     test_data = np.reshape(test_data, (test_data.shape[0], 784))
-    test_data = np.where(test_data > 0.5, 1, 0)
+
+    d = 40
+    reducer = sklearn.decomposition.PCA(n_components=d)
+    reducer.fit(train_data)
+
+    train_data_reduced = reducer.transform(train_data)
+    test_data_reduced = reducer.transform(test_data)
+    kmeans_reduced = reducer.transform(kmeans)
 
     label_set = set(train_labels)
 
@@ -35,18 +45,18 @@ def compare_precisions_by_nb_of_components():
 
     ks = list(range(1, 11)) + [15, 20, 30]
 
-    # print('computing {} means for initialization'.format(max(ks)))
-    # means = KMeans(n_clusters=max(ks),
-                   # verbose=2).fit(train_data).cluster_centers_
-
     for k in ks:
 
         print('learning {} components'.format(k))
 
-        model = classifier.classifier(k, model_type='gmm', verbose=True)
-        model.fit(train_data, train_labels)
+        model = classifier.classifier(k, covariance_type='full',
+                                      model_type='gmm',
+                                      means_init_heuristic='kmeans',
+                                      means=kmeans_reduced,
+                                      verbose=False)
+        model.fit(train_data_reduced, train_labels)
 
-        predicted_labels = model.predict(test_data, label_set)
+        predicted_labels = model.predict(test_data_reduced, label_set)
         expected_labels = test_labels
 
         precision = np.mean(predicted_labels == expected_labels)
