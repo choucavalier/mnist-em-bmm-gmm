@@ -2,6 +2,13 @@ import numpy as np
 
 import bmm
 
+def _model_class_from_type(model_type):
+
+    if model_type == 'bmm':
+        return bmm.bmm
+
+    raise ValueError('Unknown model type: {}'.format(model_type))
+
 class classifier:
 
     def __init__(self, n_components, model_type='bmm'):
@@ -10,7 +17,7 @@ class classifier:
 
         self.models = dict()
 
-        self.model_class = bmm.bmm
+        self.model_class = _model_class_from_type(model_type)
 
     def fit(self, x, labels):
 
