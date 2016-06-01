@@ -21,6 +21,8 @@ class mixture:
         k = self.n_components
 
         self.weights = np.array([1 / k for _ in range(k)])
+        self.means = None
+        self.covars = None
 
         self.converged_ = False
 
@@ -110,7 +112,8 @@ class mixture:
 def _kmeans_init(x, k, means=None, verbose=False):
 
     if means is None:
-        kmeans = KMeans(n_clusters=k, verbose=verbose).fit(x).cluster_centers_
+        kmeans = KMeans(n_clusters=k,
+                        verbose=int(verbose)).fit(x).cluster_centers_
 
     else:
         # keeping the first self.k means
