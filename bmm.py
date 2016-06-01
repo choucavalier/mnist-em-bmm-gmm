@@ -2,13 +2,11 @@ import numpy as np
 
 import mixture
 
-EPS = np.finfo(float).eps
-
 class bmm(mixture.mixture):
 
-    def __init__(self, n_components, verbose=False):
+    def __init__(self, n_components, n_iter=100, verbose=False):
 
-        super().__init__(n_components, verbose=verbose)
+        super().__init__(n_components, n_iter=n_iter, verbose=verbose)
 
     def _log_support(self, x):
 
@@ -25,12 +23,3 @@ class bmm(mixture.mixture):
                 + np.sum(x_c * np.log(mu_c[i, :].clip(min=1e-50)), 1))
 
         return log_support
-
-    def _do_mstep(self, x, z):
-
-        weights = z.sum(axis=0)
-        weighted_x_sum = np.dot(z.T, x)
-        inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
-
-        self.weights = (weights / (weights.sum() + 10 * EPS) + EPS)
-        self.means = weighted_x_sum * inverse_weights

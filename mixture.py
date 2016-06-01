@@ -2,20 +2,24 @@ from datetime import datetime
 import sys
 
 import numpy as np
-import scipy.misc
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+
+EPS = np.finfo(float).eps
 
 class mixture:
 
-    def __init__(self, n_components, n_iter=10, tol=1e-3, verbose=False):
+    def __init__(self, n_components, init_params='wm', n_iter=100,
+                 tol=1e-3, min_covar=1e-4, verbose=False):
 
         #: number of components in the mixture
         self.n_components = n_components
+        #: params to init
+        self.init_params = init_params
         #: max number of iterations
         self.n_iter = n_iter
         #: convergence threshold
         self.tol = tol
+        self.min_covar = min_covar
         self.verbose = verbose
 
         k = self.n_components
@@ -26,7 +30,7 @@ class mixture:
 
         self.converged_ = False
 
-    def fit(self, x, init_heuristic='random', labels=None):
+    def fit(self, x, means_init_heuristic='random', means=None, labels=None):
 
         k = self.n_components
         n = x.shape[0]
@@ -34,16 +38,28 @@ class mixture:
 
         self.means = np.ndarray(shape=(k, d))
 
-        if self.verbose:
-            print('using {} heuristic to initialize the means')
-
         # initialization of the means
-        if init_heuristic == 'random':
-            self.means = np.random.rand(k, d) * 0.5 + 0.25
-        elif init_heuristic == 'data_classes_mean':
-            self.means = _data_classes_mean_init(x, labels)
-        elif init_heuristic == 'kmeans':
-            self.means = _kmeans_init(x, k, verbose=self.verbose)
+        if 'm' in self.init_params:
+            if self.verbose:
+                print('using {} heuristic to initialize the means'
+                      .format(means_init_heuristic))
+            if means_init_heuristic == 'random':
+                self.means = np.random.rand(k, d) * 0.5 + 0.25
+            elif means_init_heuristic == 'data_classes_mean':
+                if labels is None:
+                    raise ValueError(
+                        'labels required for data_classes_mean init')
+                self.means = _data_classes_mean_init(x, labels)
+            elif means_init_heuristic == 'kmeans':
+                self.means = _kmeans_init(x, k, means=means,
+                                          verbose=self.verbose)
+
+        # initialization of the covars
+        if 'c' in self.init_params:
+            if self.verbose:
+                print('initializing covars')
+            cv = np.cov(x.T) + self.min_covar * np.eye(x.shape[1])
+            self.covars = np.tile(np.diag(cv), (k, 1))
 
         start = datetime.now()
 
@@ -84,21 +100,20 @@ class mixture:
         print('converged in {} iterations in {}'
               .format(iterations, elapsed))
 
-    def plot_means(self):
+    def _do_mstep(self, x, z):
 
-        k = self.n_components
+        weights = z.sum(axis=0)
+        weighted_x_sum = np.dot(z.T, x)
+        inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
 
-        rows = k // 5 + 1
-        columns = min(k, 5)
+        self.weights = (weights / (weights.sum() + 10 * EPS) + EPS)
+        self.means = weighted_x_sum * inverse_weights
 
-        for i in range(k):
-            plt.subplot(rows, columns, i + 1)
-            plt.imshow(scipy.misc.toimage(self.means[i].reshape(28, 28),
-                                          cmin=0.0, cmax=1.0))
 
     def score_samples(self, x):
 
         log_support = self._log_support(x)
+
         lpr = log_support + np.log(self.weights)
         logprob = np.logaddexp.reduce(lpr, axis=1)
         responsibilities = np.exp(lpr - logprob[:, np.newaxis])
@@ -116,6 +131,7 @@ def _kmeans_init(x, k, means=None, verbose=False):
                         verbose=int(verbose)).fit(x).cluster_centers_
 
     else:
+        assert means.shape[0] >= k, 'not enough means provided for kmeans init'
         # keeping the first self.k means
         kmeans = means[:(k - 1), :]
 

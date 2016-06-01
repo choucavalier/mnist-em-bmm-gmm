@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--path', default='/home/data/ml/mnist',
                     help='path to the mnist data')
 
-parser.add_argument('--k', default=10,
+parser.add_argument('--k', default=10, type=int,
                     help='number of components')
 
 args = parser.parse_args()
@@ -43,7 +43,7 @@ def compare_precisions_by_nb_of_components():
 
         print('learning {} components'.format(k))
 
-        model = classifier.classifier(k)
+        model = classifier.classifier(k, model_type='gmm', verbose=True)
         model.fit(train_data, train_labels)
 
         predicted_labels = model.predict(test_data, label_set)
