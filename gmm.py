@@ -6,7 +6,10 @@ import mixture
 EPS = np.finfo(float).eps
 
 def _log_multivariate_normal_density_diag(x, means, covars):
-    '''Compute Gaussian log-density at x for a diagonal model'''
+    '''Compute Gaussian log-density at x for a diagonal model
+
+    Taken from scikit-learn's implementation
+    '''
     d = x.shape[1]
     lpr = -0.5 * (d * np.log(2 * np.pi) + np.sum(np.log(covars), 1)
                   + np.sum((means ** 2) / covars, 1)
@@ -15,7 +18,10 @@ def _log_multivariate_normal_density_diag(x, means, covars):
     return lpr
 
 def _log_multivariate_normal_density_full(x, means, covars, min_covar=1.e-7):
-    '''Log probability for full covariance matrices'''
+    '''Log probability for full covariance matrices
+
+    Taken from scikit-learn's implementation
+    '''
     n_samples, n_dim = x.shape
     nmix = len(means)
     log_prob = np.empty((n_samples, nmix))
@@ -76,14 +82,20 @@ class gmm(mixture.mixture):
             self.covars = self._covar_mstep_full(x, z, weighted_x_sum, norm)
 
     def _covar_mstep_diag(self, x, responsibilities, weighted_x_sum, norm):
-        '''Perform the covariance M step for diagonal cases'''
+        '''Perform the covariance M step for diagonal cases
+
+        Taken from scikit-learn's implementation
+        '''
         avg_x2 = np.dot(responsibilities.T, x * x) * norm
         avg_means2 = self.means ** 2
         avg_x_means = self.means * weighted_x_sum * norm
         return avg_x2 - 2 * avg_x_means + avg_means2 + self.min_covar
 
     def _covar_mstep_full(self, x, responsibilities, weighted_x_sum, norm):
-        '''Perform the covariance M step for full cases'''
+        '''Perform the covariance M step for full cases
+
+        Taken from scikit-learn's implementation
+        '''
         # Eq. 12 from K. Murphy, "Fitting a Conditional Linear Gaussian
         # Distribution"
         n_features = x.shape[1]
